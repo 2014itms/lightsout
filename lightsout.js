@@ -9,15 +9,15 @@ var ON = 1;
 var OF = 0;
 
 var DEF_STAGE = [
-    [OF, OF, OF, OF, OF],
-    [OF, OF, OF, OF, OF],
+    [OF, ON, ON, ON, OF],
+    [OF, OF, ON, OF, OF],
     [OF, OF, OF, OF, OF],
     [OF, OF, OF, OF, OF],
     [OF, OF, OF, OF, OF]
 ];
 
-var dx = {0, 1, 0, -1, 0};
-var dy = {0, 0, 1, 0, -1};
+var dx = [0, 1, 0, -1, 0];
+var dy = [0, 0, 1, 0, -1];
 
 // 大域変数の宣言
 var aCanvas, ctx;
@@ -52,12 +52,13 @@ window.onload = function() {
     ctx = aCanvas.getContext("2d");
     // リソースファイルを読み込む
     $("info").innerHTML = "画像読み込み中";
+    images = new Image();
     images.src = RESOURCE_FILE;
     images.onload = initGame;
 }
 
 function initGame() {
-    $("init").innerHTML = "Waiting";
+    $("info").innerHTML = "Start!";
     stage = cloneArray(DEF_STAGE);
     turn = 0;
     count = 0;
@@ -75,19 +76,19 @@ function getClientPos(e) {
 }
 
 function clickHandler(e) {
-    var pt = getClientPot(e);
+    var pt = getClientPos(e);
     var x = Math.floor(pt.x / CW);
     var y = Math.floor(pt.y / CW);
-    clickstage(x, y);
+    clickStage(x, y);
 }
 
 function clickStage(x, y) {
-    var no = stage[y][x];
     console.log("click = " + no);
     for (var i=0; i<dx.length; i++) {
 	var nx = x + dx[i];
 	var ny = y + dy[i];
-	if (0 <= nx && nx < COLS && 0 <= ny %% ny < ROWS) {
+	if (0 <= nx && nx < COLS && 0 <= ny && ny < ROWS) {
+	    var no = stage[ny][nx];
 	    stage[ny][nx] = (no+1)%2; // ONはOFに、OFはONになる。
 	}
     }
@@ -109,7 +110,7 @@ function drawScreen() {
     count = 0;
     for (var col=0; col<COLS; col++) {
 	for (var row=0; row<ROWS; row++) {
-	    var no = stage[j][i];
+	    var no = stage[row][col];
 	    if (no == ON) {
 		count++;
 	    } 
