@@ -8,13 +8,24 @@ var RESOURCE_FILE = "resource.png";
 var ON = 1;
 var OF = 0;
 
+var PLAYING = false;
+
 var DEF_STAGE = [
-    [OF, ON, ON, ON, OF],
-    [OF, OF, ON, OF, OF],
+    [OF, OF, OF, OF, OF],
+    [OF, OF, OF, OF, OF],
     [OF, OF, OF, OF, OF],
     [OF, OF, OF, OF, OF],
     [OF, OF, OF, OF, OF]
 ];
+
+var EMPTY_STAGE = [
+    [OF, OF, OF, OF, OF],
+    [OF, OF, OF, OF, OF],
+    [OF, OF, OF, OF, OF],
+    [OF, OF, OF, OF, OF],
+    [OF, OF, OF, OF, OF]
+];
+
 
 var dx = [0, 1, 0, -1, 0];
 var dy = [0, 0, 1, 0, -1];
@@ -54,12 +65,19 @@ window.onload = function() {
     $("info").innerHTML = "画像読み込み中";
     images = new Image();
     images.src = RESOURCE_FILE;
-    images.onload = initGame;
+    images.onload = makeGame;
+}
+
+function makeGame() {
+    $("info").innerHTML = "問題を作成してください";
+    stage = cloneArray(EMPTY_STAGE);
+    drawScreen();
 }
 
 function initGame() {
     $("info").innerHTML = "Start!";
     stage = cloneArray(DEF_STAGE);
+    PLAYING = true;
     turn = 0;
     count = 0;
     drawScreen();
@@ -79,7 +97,18 @@ function clickHandler(e) {
     var pt = getClientPos(e);
     var x = Math.floor(pt.x / CW);
     var y = Math.floor(pt.y / CW);
-    clickStage(x, y);
+    if (PLAYING) {
+	clickStage(x, y);
+    } else {
+	editStage(x, y);
+    }
+}
+
+function editStage(x, y) {
+    console.log("click = " + no);
+    var no = stage[y][x];
+    stage[y][x] = (no+1)%2;
+    drawScreen();
 }
 
 function clickStage(x, y) {
@@ -127,4 +156,13 @@ function drawScreen() {
 	    ctx.drawImage(images, sx, sy, sw, sh, tx, ty, tw, th);
 	}
     }
+}
+
+function defineStage() {
+    for (var col=0; col<COLS; col++) {
+	for (var row=0; row<ROWS; row++) {
+	    DEF_STAGE[row][col] = stage[row][col];
+	}
+    }
+    initGame();
 }
