@@ -8,24 +8,7 @@ var RESOURCE_FILE = "resource.png";
 var ON = 1;
 var OF = 0;
 
-var PLAYING = false;
-
-var DEF_STAGE = [
-    [OF, OF, OF, OF, OF],
-    [OF, OF, OF, OF, OF],
-    [OF, OF, OF, OF, OF],
-    [OF, OF, OF, OF, OF],
-    [OF, OF, OF, OF, OF]
-];
-
-var EMPTY_STAGE = [
-    [OF, OF, OF, OF, OF],
-    [OF, OF, OF, OF, OF],
-    [OF, OF, OF, OF, OF],
-    [OF, OF, OF, OF, OF],
-    [OF, OF, OF, OF, OF]
-];
-
+var PLAYING = 0, MAKING = 1;
 
 var dx = [0, 1, 0, -1, 0];
 var dy = [0, 0, 1, 0, -1];
@@ -33,24 +16,14 @@ var dy = [0, 0, 1, 0, -1];
 // 大域変数の宣言
 var aCanvas, ctx;
 var images;
-var stage;
+var defStage = [];
+var stage = [];
 var turn;
 var count;
+var state;
 
 function $(id) {
     return document.getElementById(id);
-}
-
-function cloneArray(a) {
-    var b = [];
-    for (var i=0; i<a.length; i++) {
-	if (typeof(a[i]) == "object") {
-	    b[i] = cloneArray(a[i]);
-	} else {
-	    b[i] = a[i];
-	}
-    }
-    return b;
 }
 
 window.onload = function() {
@@ -65,22 +38,62 @@ window.onload = function() {
     $("info").innerHTML = "画像読み込み中";
     images = new Image();
     images.src = RESOURCE_FILE;
-    images.onload = makeGame;
+    // 2次元配列の作成
+    for (var col=0; col<COLS; col++) {
+        defStage[col] = new Array();
+        stage[col] = new Array();
+    }
+    images.onload = buttonInit; // 括弧をつけてはいけない。
 }
+
+// 状態の遷移に関係する関数
 
 function makeGame() {
     $("info").innerHTML = "問題を作成してください";
-    stage = cloneArray(EMPTY_STAGE);
+    for (var col=0; col<COLS; col++) {
+	for (var row=0; row<ROWS; row++) {
+            stage[row][col] = OF;
+        }
+    }
+    state = MAKING;
     drawScreen();
 }
 
 function initGame() {
     $("info").innerHTML = "Start!";
-    stage = cloneArray(DEF_STAGE);
-    PLAYING = true;
+    for (var col=0; col<COLS; col++) {
+	for (var row=0; row<ROWS; row++) {
+            stage[row][col] = defStage[row][col];
+        }
+    }
+    state = PLAYING;
     turn = 0;
     count = 0;
     drawScreen();
+}
+
+function buttonInit() {
+    for (var col=0; col<COLS; col++) {
+	for (var row=0; row<ROWS; row++) {
+            defStage[row][col] = OF;
+        }
+    }
+    // 共通処理
+    makeGame();
+}
+
+function buttonStart() {
+    if (state == MAKING) { // 問題作成時に押された場合
+        for (var col=0; col<COLS; col++) {
+	    for (var row=0; row<ROWS; row++) {
+                defStage[row][col] = stage[row][col];
+            }
+        }
+    } else if (state == PLAYING) { // プレイ中に押された場合
+	
+    }
+    // 共通処理
+    initGame();
 }
 
 // マウス処理
@@ -97,7 +110,7 @@ function clickHandler(e) {
     var pt = getClientPos(e);
     var x = Math.floor(pt.x / CW);
     var y = Math.floor(pt.y / CW);
-    if (PLAYING) {
+    if (state == PLAYING) {
 	clickStage(x, y);
     } else {
 	editStage(x, y);
@@ -105,14 +118,14 @@ function clickHandler(e) {
 }
 
 function editStage(x, y) {
-    console.log("click = " + no);
     var no = stage[y][x];
+    console.log("click = " + no);
     stage[y][x] = (no+1)%2;
     drawScreen();
 }
 
 function clickStage(x, y) {
-    console.log("click = " + no);
+    console.log("click = " + stage[y][x]);
     for (var i=0; i<dx.length; i++) {
 	var nx = x + dx[i];
 	var ny = y + dy[i];
@@ -158,11 +171,3 @@ function drawScreen() {
     }
 }
 
-function defineStage() {
-    for (var col=0; col<COLS; col++) {
-	for (var row=0; row<ROWS; row++) {
-	    DEF_STAGE[row][col] = stage[row][col];
-	}
-    }
-    initGame();
-}
