@@ -5,19 +5,20 @@ var CANVAS_W = CW * COLS;
 var CANVAS_H = CW * ROWS;
 var RESOURCE_FILE = "resource.png";
 
-var ON = 1;
-var OF = 0;
+// ライツアウトで、光っているボタンをON、消えているボタンをOFで表現する。
+const ON = 1, OF = 0;
 
-var PLAYING = 0, MAKING = 1;
+// PLAYINGはライツアウトで遊んでいるところ。MAKINGはライツアウトの問題を作成しているところ。
+const PLAYING = 0, MAKING = 1;
 
-var dx = [0, 1, 0, -1, 0];
-var dy = [0, 0, 1, 0, -1];
+const dx = [0, 1, 0, -1, 0];
+const dy = [0, 0, 1, 0, -1];
 
 // 大域変数の宣言
 var aCanvas, ctx;
 var images;
-var defStage = [];
-var stage = [];
+var defStage = []; // 問題を格納しておく。
+var stage = []; // 画面に描画するステージ。
 var turn;
 var count;
 var state;
@@ -31,14 +32,14 @@ window.onload = function() {
     aCanvas = $("aCanvas");
     aCanvas.width = CANVAS_W;
     aCanvas.height = CANVAS_H;
-    // キャンバスをクリックしたらclickHandlerを開始
+    // キャンバスをクリックしたらclickHandlerを開始。
     aCanvas.onclick = clickHandler;
     ctx = aCanvas.getContext("2d");
-    // リソースファイルを読み込む
+    // リソースファイルを読み込む。
     $("info").innerHTML = "画像読み込み中";
     images = new Image();
     images.src = RESOURCE_FILE;
-    // 2次元配列の作成
+    // 2次元配列を作成作成する。
     for (var col=0; col<COLS; col++) {
         defStage[col] = new Array();
         stage[col] = new Array();
@@ -48,7 +49,7 @@ window.onload = function() {
 
 // 状態の遷移に関係する関数
 
-function makeGame() {
+function makeGame() { // 問題を作るパート。状態をMAKINGにする。
     $("info").innerHTML = "問題を作成してください";
     for (var col=0; col<COLS; col++) {
 	for (var row=0; row<ROWS; row++) {
@@ -59,7 +60,7 @@ function makeGame() {
     drawScreen();
 }
 
-function initGame() {
+function initGame() { // プレイするパート。状態をPLAYINGにする。
     $("info").innerHTML = "Start!";
     for (var col=0; col<COLS; col++) {
 	for (var row=0; row<ROWS; row++) {
@@ -73,32 +74,29 @@ function initGame() {
 }
 
 function buttonInit() {
+    // MAKING→MAKINGにしても、PLAYING→MAKINGにしても、画面をクリアする。
     for (var col=0; col<COLS; col++) {
 	for (var row=0; row<ROWS; row++) {
             defStage[row][col] = OF;
         }
     }
-    // 共通処理
     makeGame();
 }
 
 function buttonStart() {
-    if (state == MAKING) { // 問題作成時に押された場合
+    if (state == MAKING) { // MAKING→PLAYINGの場合は、現在の状態を問題として記録する。PLAYING→PLAYINGの場合はこの処理はいらない。
         for (var col=0; col<COLS; col++) {
 	    for (var row=0; row<ROWS; row++) {
                 defStage[row][col] = stage[row][col];
             }
         }
-    } else if (state == PLAYING) { // プレイ中に押された場合
-	
     }
-    // 共通処理
     initGame();
 }
 
 // マウス処理
 
-function getClientPos(e) {
+function getClientPos(e) { // クリックした位置のピクセル単位での座標を求める。
     var res = { x:0, y:0 };
     var rect = e.target.getBoundingClientRect();
     res.x = e.clientX - rect.left;
@@ -106,7 +104,7 @@ function getClientPos(e) {
     return res;
 }
 
-function clickHandler(e) {
+function clickHandler(e) { // クリックした位置のボタン単位での座標を求め、それをclickStageまたはeditStageに渡す。
     var pt = getClientPos(e);
     var x = Math.floor(pt.x / CW);
     var y = Math.floor(pt.y / CW);
@@ -117,16 +115,16 @@ function clickHandler(e) {
     }
 }
 
-function editStage(x, y) {
+function editStage(x, y) { // クリックした位置の座標だけ反転させる。
     var no = stage[y][x];
     console.log("click = " + no);
-    stage[y][x] = (no+1)%2;
+    stage[y][x] = (no+1)%2; // ONはOFに、OFはONになる。
     drawScreen();
 }
 
 function clickStage(x, y) {
     console.log("click = " + stage[y][x]);
-    for (var i=0; i<dx.length; i++) {
+    for (var i=0; i<dx.length; i++) { // editStageと異なり、隣のマスも反転させる必要がある。そこでdxとdyを用意していた。
 	var nx = x + dx[i];
 	var ny = y + dy[i];
 	if (0 <= nx && nx < COLS && 0 <= ny && ny < ROWS) {
@@ -138,12 +136,12 @@ function clickStage(x, y) {
     turn++;
     $("info").innerHTML = turn + "回 押しました。"
     // クリア判定
-    if (count == 0) {
-	setTimeout(gameClear, 1);
+    if (count == 0) { // 光っているマスがなければクリア
+	setTimeout(gameClear, 1); // setTimeoutを使う理由はやや難しいので説明しません。
     }
 }
 
-function gameClear() {
+function gameClear() { // ゲームクリアしたときに呼び出される。自分の感性でアレンジしましょう。
     alert("ゲームクリア！ (" + turn + "回)");
     initGame();
 }
@@ -153,7 +151,7 @@ function drawScreen() {
     for (var col=0; col<COLS; col++) {
 	for (var row=0; row<ROWS; row++) {
 	    var no = stage[row][col];
-	    if (no == ON) {
+	    if (no == ON) { // countに光っているボタンの数を格納する。
 		count++;
 	    } 
 	    // 絵画元
